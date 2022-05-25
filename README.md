@@ -33,14 +33,23 @@ EOF
 ```
 kubectl certificate approve munna-user
 
+## Create kubeconfig file for other host/machine/client
 kubectl get csr munna-user -o jsonpath='{.status.certificate}' | base64 --decode > munna-k8s.crt
-
 kubectl config view -o jsonpath='{.clusters[0].cluster.certificate-authority-data}' --raw | base64 --decode - > k8s-ca.crt
-
 kubectl config set-cluster $(kubectl config view -o jsonpath='{.clusters[0].name}') --server=$(kubectl config view -o jsonpath='{.clusters[0].cluster.server}') --certificate-authority=k8s-ca.crt --kubeconfig=munna-k8s-config --embed-certs
-
 kubectl config set-credentials munna --client-certificate=munna-k8s.crt --client-key=munna-k8s.key --embed-certs --kubeconfig=munna-k8s-config
 kubectl config set-context munna --cluster=$(kubectl config view -o jsonpath='{.clusters[0].name}') --namespace=munna --user=munna --kubeconfig=munna-k8s-config
+
+or
+## Create add munna credential to existing kubeconfig file ($HOME/.kube/config)
+
+kubectl config set-credentials munna --client-key=munna-k8s.key --client-certificate=munna-k8s.crt --embed-certs=true
+kubectl config set-context munna --cluster=kubernetes --user=munna
+
+kubectl config use-context munna
+kubectl config use-context kubernetes-admin@kubernetes
+kubectl config get-users
+kubectl config get-contexts
 
 ## Role Set: 
 
